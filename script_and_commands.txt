@@ -1,0 +1,60 @@
+#!/bin/bash
+# /usr/local/bin/ilo_autossh.sh
+#
+# This script uses autossh to make a one-time SSH connection to the iLO4 interface
+# on boot. It uses an SSH key for authentication and executes specified remote commands.
+#
+# Requirements:
+#   - autossh must be installed (e.g., via yum install autossh)
+#   - The specified SSH key should have proper permissions and be set up for passwordless login.
+#
+# Variables:
+SSH_KEY="/path/to/private_key"       # Path to your private SSH key for iLO access
+ILO_USER="your_ilo_username"         # Your iLO username
+ILO_IP="10.10.10.200"                # iLO address
+ILO_PORT="22"                        # iLO port
+REMOTE_COMMAND="####"                # Replace with the commands you want executed remotely
+
+# Use autossh to connect once and execute the remote command.
+autossh -M 0 -i "${SSH_KEY}" \
+    -p "${ILO_PORT}" "${ILO_USER}@${ILO_IP}" "${REMOTE_COMMAND}"
+
+
+#################################################################
+
+chmod +x /usr/local/bin/ilo_autossh.sh -----> set to executable
+
+
+##################################################################
+
+##### RUN AS SERVICE #######
+
+[Unit]
+Description=One-time AutoSSH connection to iLO4 shell on boot
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/ilo_autossh.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+
+
+######################################
+
+
+systemctl daemon-reload
+systemctl enable ilo_autossh.service
+systemctl start ilo_autossh.service
+
+
+
+#####################################
+
+systemctl status ilo_autossh.service
+
+
+
+
